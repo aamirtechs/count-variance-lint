@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Count Variance Lint: a stock variance report ranked by value impact, with recount sheets</title>
+<meta name="description" content="Compare system stock vs counted stock CSVs and get a variance report ranked by value impact, with duplicate-key warnings, threshold flags and recount sheets for the worst offenders.">
+<meta name="keywords" content="stock count variance report, cycle count variance calculator, inventory count comparison spreadsheet, shrinkage variance tool">
+<meta name="author" content="Amir Hussain">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://aamirtechs.github.io/count-variance-lint/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="theme-color" content="#0b1f3a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Count Variance Lint">
+<meta property="og:description" content="Compare system stock vs counted stock CSVs and get a variance report ranked by value impact, with duplicate-key warnings, threshold flags and recount sheets for the worst offenders.">
+<meta property="og:url" content="https://aamirtechs.github.io/count-variance-lint/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Count Variance Lint">
+<meta name="twitter:description" content="Compare system stock vs counted stock CSVs and get a variance report ranked by value impact, with duplicate-key warnings, threshold flags and recount sheets for the worst offenders.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Count Variance Lint","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Amir Hussain","url":"https://aamirtechs.com"},"url":"https://aamirtechs.github.io/count-variance-lint/"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>:root{--navy:#0b1f3a;--navy2:#122c50;--gold:#d4a72c;--ink:#16233a;--muted:#5a6a84;--line:#e3e9f2;--bg:#f6f8fb;--card:#ffffff}
+*{box-sizing:border-box}body{margin:0;font-family:'Plus Jakarta Sans',Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:44px 20px 36px;text-align:center}
+header h1{font-family:Sora,Arial,sans-serif;font-size:2rem;margin:0 0 10px}header h1 span{color:var(--gold)}
+header p{max-width:640px;margin:0 auto 14px;color:#dbe4f2}
+.stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.stats span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);padding:5px 12px;border-radius:999px;font-size:.85rem}
+main{max-width:920px;margin:-18px auto 30px;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 6px 24px rgba(11,31,58,.07)}
+label{display:block;font-weight:700;margin:14px 0 6px;font-size:.92rem}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+textarea{min-height:110px;font-family:ui-monospace,Menlo,monospace;font-size:.85rem}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:640px){.row{grid-template-columns:1fr}}
+.btn-run{background:var(--gold);color:var(--navy);border:0;padding:12px 22px;border-radius:9px;font-weight:800;font-size:1rem;cursor:pointer;margin-top:18px}
+.btn-dl{background:var(--navy);color:#fff;border:0;padding:10px 16px;border-radius:8px;font-weight:700;cursor:pointer;margin:10px 8px 0 0}
+.privacy{color:var(--muted);font-size:.88rem;margin-top:14px}
+.msg{margin-top:14px;font-weight:700}.err{color:#b3261e}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.9rem}th,td{border:1px solid var(--line);padding:7px 9px;text-align:left}th{background:#eef3fa}
+section.info{max-width:920px;margin:0 auto 30px;padding:0 16px}section.info h2{font-family:Sora,Arial,sans-serif}
+footer{background:var(--navy);color:#cdd9ec;text-align:center;padding:26px 16px;font-size:.9rem}footer a{color:var(--gold)}
+pre.out{background:#0b1f3a;color:#e8eefc;padding:14px;border-radius:10px;overflow:auto;max-height:300px;font-size:.82rem;white-space:pre-wrap}
+.best{background:#fdf3d7;font-weight:700}.flag{color:#b3261e;font-weight:700}mark{background:#ffe58a}</style>
+</head>
+<body>
+<header>
+<h1>Count <span>Variance Lint</span></h1>
+<p>Compare system stock vs counted stock CSVs and get a variance report ranked by value impact, with recount sheets for the worst offenders.</p>
+<div class="stats"><span>Free</span><span>100% in your browser</span><span>No sign-up</span></div>
+</header>
+<main>
+<div class="card">
+
+<label for="mode">Input mode</label>
+<select id="mode"><option value="two">Two CSVs: system stock and counted stock</option><option value="one">One combined CSV with system qty and counted qty columns</option></select>
+<label for="system">System stock CSV (sku, location, qty, unit cost)</label>
+<textarea id="system">sku,location,qty,unit cost
+WIDGET-1,A1,100,2.50
+GADGET-2,B2,50,10.00
+THING-3,A1,20,5.00</textarea>
+<label for="counted">Counted stock CSV (sku, location, qty)</label>
+<textarea id="counted">sku,location,qty
+WIDGET-1,A1,96
+GADGET-2,B2,50
+THING-3,A1,35</textarea>
+<div class="row">
+<div><label for="pct">Flag threshold: variance percent</label><input id="pct" type="number" value="5"></div>
+<div><label for="topN">Recount sheet size (top N)</label><input id="topN" type="number" value="20"></div>
+</div>
+<button class="btn-run" id="run">Compare counts</button>
+
+<p class="privacy">Runs 100% in your browser. Your files never leave this device.</p>
+<div class="msg" id="msg"></div>
+<div id="results"></div>
+</div>
+</main>
+<section class="info">
+<h2>How it works</h2>
+<ul>
+<li>Two CSVs (system and counted), or one combined CSV with both quantity columns.</li>
+<li>Matching on a composite SKU + location key, with explicit duplicate-key warnings instead of silent overwrites.</li>
+<li>Variance units, percent and value per line, ranked by absolute value impact so shrinkage surfaces first.</li>
+<li>Threshold flags mark lines that need investigation.</li>
+<li>Download a recount sheet for the top N lines and the full variance report as CSV.</li>
+</ul>
+</section>
+<footer>
+<p>Built by Amir Hussain, operations manager and founder of <a href="https://aamirtechs.com" target="_blank" rel="noopener">AamirTechs: operations, customer support and e-commerce services</a>.</p>
+<p><a href="https://github.com/aamirtechs" target="_blank" rel="noopener">More open source tools on GitHub</a></p>
+</footer>
+<script src="src/logic.js"></script>
+<script>
+function download(name, text, type) {
+  var blob = new Blob([text], { type: type || "text/plain;charset=utf-8" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+}
+function esc(s) { return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+var L = window.CountVarianceLint;
+var lastLines = null;
+document.getElementById("run").addEventListener("click", function () {
+  var msg = document.getElementById("msg"); var res = document.getElementById("results");
+  msg.textContent = ""; msg.className = "msg"; res.innerHTML = "";
+  var mode = document.getElementById("mode").value;
+  var sysParsed, cntParsed;
+  if (mode === "one") {
+    var combined = L.parseCombinedCSV(document.getElementById("system").value);
+    if (combined.error) { msg.textContent = combined.error; msg.className = "msg err"; return; }
+    sysParsed = combined.system; cntParsed = combined.counted;
+  } else {
+    sysParsed = L.parseStockCSV(document.getElementById("system").value, {});
+    cntParsed = L.parseStockCSV(document.getElementById("counted").value, {});
+  }
+  if (!sysParsed.items.length && !cntParsed.items.length) { msg.textContent = "No stock rows parsed. Check the headers."; msg.className = "msg err"; return; }
+  var lines = L.flagLines(L.compareCounts(sysParsed.items, cntParsed.items), { pctLimit: parseFloat(document.getElementById("pct").value) || 5 });
+  lastLines = lines;
+  var s = L.summarise(lines);
+  var warns = sysParsed.warnings.concat(cntParsed.warnings);
+  var dupes = sysParsed.duplicates.map(function (d) { return "System CSV duplicate key: " + d; }).concat(cntParsed.duplicates.map(function (d) { return "Counted CSV duplicate key: " + d; }));
+  var html = "";
+  if (warns.concat(dupes).length) html += '<p class="flag">' + warns.concat(dupes).map(esc).join("<br>") + "</p>";
+  html += "<p><strong>" + s.totalLines + "</strong> lines compared, <strong>" + s.varianceLines + "</strong> with variance, <strong>" + s.flaggedLines + "</strong> flagged. Net variance value <strong>" + s.netValue + "</strong>, gross <strong>" + s.grossValue + "</strong>.</p>";
+  html += "<table><tr><th>SKU</th><th>Location</th><th>System</th><th>Counted</th><th>Var units</th><th>Var %</th><th>Var value</th><th>Flag</th></tr>";
+  L.rankByImpact(lines).forEach(function (l) {
+    html += "<tr><td>" + esc(l.sku) + "</td><td>" + esc(l.location) + "</td><td>" + l.systemQty + "</td><td>" + l.countedQty + "</td><td>" + l.varianceUnits + "</td><td>" + l.variancePct + "</td><td>" + l.varianceValue + "</td><td>" + (l.flagged ? '<span class="flag">FLAG</span>' : "") + (l.missingInCount ? " not counted" : l.missingInSystem ? " not in system" : "") + "</td></tr>";
+  });
+  html += "</table>";
+  html += '<button class="btn-dl" id="dlFull">Download full variance CSV</button><button class="btn-dl" id="dlRecount">Download recount sheet CSV</button>';
+  res.innerHTML = html;
+  document.getElementById("dlFull").addEventListener("click", function () { download("variance-report.csv", L.buildVarianceCSV(lastLines), "text/csv;charset=utf-8"); });
+  document.getElementById("dlRecount").addEventListener("click", function () { download("recount-sheet.csv", L.buildRecountCSV(lastLines, parseInt(document.getElementById("topN").value, 10) || 20), "text/csv;charset=utf-8"); });
+  msg.textContent = "Comparison complete.";
+});
+
+</script>
+</body>
+</html>
